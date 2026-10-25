@@ -1,5 +1,11 @@
 streamlit
 groq
-python-dotenv
-requests
 supabase
+pandas
+numpy
+requests
+openpyxl
+xlrd
+pypdf
+python-docx
+python-dotenv
