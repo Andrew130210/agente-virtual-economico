@@ -270,6 +270,7 @@ INSTRUCCIONES PARA TRABAJOS COMPLETOS:
   completo en una sola respuesta coherente.
 - No sigas llamando herramientas cuando ya tengas información
   suficiente para responder.
+
 """
 # =========================
 # SUBIR ARCHIVOS
