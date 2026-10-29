@@ -249,6 +249,27 @@ Interpreta los resultados de las herramientas con cuidado:
 - Si una herramienta devuelve un error o no encuentra observaciones,
   informa claramente esa limitación.
 - Distingue los datos obtenidos de las APIs de tus explicaciones.
+
+INSTRUCCIONES PARA TRABAJOS COMPLETOS:
+
+- Antes de utilizar herramientas, identifica qué solicita el usuario.
+- Selecciona únicamente las herramientas necesarias para resolver la tarea.
+- No llames a todas las herramientas si no aportan información relevante.
+- Si la solicitud es demasiado general y falta el tema del trabajo, pregunta al usuario qué tema desea investigar.
+- Si el usuario solicita un trabajo completo y el tema está claro, organiza la respuesta en:
+  1. Introducción.
+  2. Objetivos.
+  3. Desarrollo y análisis.
+  4. Datos y resultados obtenidos con las herramientas.
+  5. Conclusiones.
+  6. Fuentes consultadas, cuando estén disponibles.
+- Utiliza los resultados reales de las herramientas y no inventes cifras.
+- Si una herramienta falla, intenta una alternativa cuando sea posible
+  e indica las limitaciones.
+- Después de obtener la información necesaria, redacta el trabajo
+  completo en una sola respuesta coherente.
+- No sigas llamando herramientas cuando ya tengas información
+  suficiente para responder.
 """
 # =========================
 # SUBIR ARCHIVOS
@@ -447,7 +468,7 @@ def process_response(
     })
 
     # Evitar un ciclo ilimitado de llamadas a herramientas
-    for _ in range(6):
+    for _ in range(12):
         respuesta = client.chat.completions.create(
             model=MODEL_NAME,
             messages=messages,
