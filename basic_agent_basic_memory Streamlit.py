@@ -41,6 +41,34 @@ api_key = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=api_key) if api_key else None
 
 # =========================
+# INICIO DE SESIÓN
+# =========================
+
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+
+if not st.session_state.autenticado:
+
+    st.title("🎮 Master Chief")
+    st.subheader("Iniciar sesión")
+
+    usuario = st.text_input("Usuario")
+    pin = st.text_input("Contraseña o PIN", type="password")
+
+    if st.button("Ingresar"):
+        if (
+            usuario == st.secrets["LOGIN_USER"]
+            and pin == str(st.secrets["LOGIN_PIN"])
+        ):
+            st.session_state.autenticado = True
+            st.rerun()
+        else:
+            st.error("Usuario o contraseña incorrectos.")
+
+    st.stop()
+
+
+# =========================
 # CONEXION CON SUPABASE
 # =========================
 
