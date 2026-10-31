@@ -61,6 +61,7 @@ if not st.session_state.autenticado:
             and pin == str(st.secrets["LOGIN_PIN"])
         ):
             st.session_state.autenticado = True
+            st.session_state.usuario_actual = usuario.strip()
             st.rerun()
         else:
             st.error("Usuario o contraseña incorrectos.")
@@ -77,9 +78,6 @@ try:
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-    print("Supabase URL:", SUPABASE_URL)
-    print("Clave configurada:", bool(SUPABASE_KEY))
-    print("Inicio de clave:", SUPABASE_KEY[:15])
 
 except Exception as e:
     supabase = None
@@ -573,6 +571,73 @@ if "chat_history" not in st.session_state:
 if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 
+if "historial_cargado" not in st.session_state:
+    st.session_state.historial_cargado = False
+
+if "usuario_actual" not in st.session_state:
+    st.session_state.usuario_actual = ""
+
+memory = st.session_state.memory
+
+
+# =========================
+# CARGAR HISTORIAL DE SUPABASE
+# =========================
+
+if (
+    supabase is not None
+    and st.session_state.usuario_actual
+    and not st.session_state.historial_cargado
+):
+    try:
+        resultado = (
+            supabase.table("conversaciones")
+            .select("pregunta, respuesta, fecha")
+            .eq("usuario", st.session_state.usuario_actual)
+            .order("fecha", desc=True)
+            .limit(100)
+            .execute()
+        )
+
+        conversaciones = list(reversed(resultado.data or []))
+
+        st.session_state.chat_history = []
+
+        st.session_state.memory = BasicMemory(
+            max_messages=MEMORY_MAX_MESSAGES
+        )
+
+        for conversacion in conversaciones:
+            pregunta = conversacion.get("pregunta") or ""
+            respuesta = conversacion.get("respuesta") or ""
+
+            if pregunta:
+                st.session_state.chat_history.append({
+                    "role": "user",
+                    "content": pregunta
+                })
+
+                st.session_state.memory.add("user", pregunta)
+
+            if respuesta:
+                st.session_state.chat_history.append({
+                    "role": "assistant",
+                    "content": respuesta
+                })
+
+                st.session_state.memory.add(
+                    "assistant",
+                    respuesta
+                )
+
+        st.session_state.historial_cargado = True
+
+    except Exception as e:
+        st.error(
+            "No se pudo recuperar el historial de Supabase. "
+            f"Detalle: {e}"
+        )
+
 memory = st.session_state.memory
 
 
@@ -669,6 +734,7 @@ def borrar_conversacion():
         max_messages=MEMORY_MAX_MESSAGES
     )
     st.session_state.pending_prompt = None
+    st.session_state.historial_cargado = True
 
 
 # =========================
@@ -1122,29 +1188,28 @@ if user_text and user_text.strip():
             memory.add("user", user_text)
             memory.add("assistant", assistant_text)
 
-                        # Guardar en la memoria.
-            memory.add("user", user_text)
-            memory.add("assistant", assistant_text)
+            # =========================
+            # GUARDAR EN SUPABASE
+            # =========================
 
-            # Guardar pregunta y respuesta en Supabase.
             if supabase is not None:
                 try:
-                    supabase.table("conversaciones").insert(
-                        {
-                            "pregunta": user_text,
-                            "respuesta": assistant_text
-                        },
-                        returning="minimal"
-                    ).execute()
-
-                    st.success("Conversación guardada en Supabase.")
+                    supabase.table("conversaciones").insert({
+                        "usuario": st.session_state.usuario_actual,
+                        "pregunta": user_text,
+                        "respuesta": assistant_text
+                    }).execute()
 
                 except Exception as e:
-                    st.error(f"Error al guardar en Supabase: {e}")
-                    print(f"Error detallado de Supabase: {e}")
-
+                    st.error(
+                        "La respuesta se generó, pero no se pudo guardar "
+                        f"en Supabase. Detalle: {e}"
+                    )
             else:
-                st.error("Supabase no está conectado.")
+                st.warning(
+                    "Supabase no está conectado. "
+                    "La conversación solo está disponible en esta sesión."
+                )
 
             # Guardar en el historial visual.
             st.session_state.chat_history.append({
@@ -1153,17 +1218,5 @@ if user_text and user_text.strip():
             })
 
         except Exception as e:
-            st.error(
-                "No se pudo obtener la respuesta. "
-                "Comprueba tu conexión, la clave API y "
-                "la disponibilidad del modelo. "
-                f"Detalle: {e}"
-            )
+            st.error(f"Error al procesar la respuesta: {e}")
 
-            # Retirar el mensaje si falló la consulta.
-            if (
-                st.session_state.chat_history
-                and st.session_state.chat_history[-1]["role"] == "user"
-                and st.session_state.chat_history[-1]["content"] == user_text
-            ):
-                st.session_state.chat_history.pop()
