@@ -297,6 +297,19 @@ INSTRUCCIONES PARA TRABAJOS COMPLETOS:
 - No sigas llamando herramientas cuando ya tengas información
   suficiente para responder.
 
+  INFORMACIÓN SOBRE LA ARQUITECTURA DEL AGENTE:
+
+- El agente utiliza Groq para procesar las consultas y generar respuestas.
+- El modelo utilizado es openai/gpt-oss-120b.
+- Utiliza Supabase como sistema de almacenamiento en la nube.
+- Se conecta a Supabase mediante la biblioteca supabase-py de Python.
+- Las conversaciones se almacenan en la tabla "conversaciones".
+- La tabla guarda el usuario, la pregunta, la respuesta y la fecha.
+- Supabase permite guardar y recuperar el historial de conversaciones.
+- BasicMemory administra el contexto temporal de la conversación durante la sesión.
+
+Si el usuario pregunta qué herramientas utiliza el agente, cómo funciona su almacenamiento o cómo está construido, responde utilizando esta información.
+
 """
 # =========================
 # SUBIR ARCHIVOS
